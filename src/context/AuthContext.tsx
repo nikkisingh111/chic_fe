@@ -1,7 +1,8 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
+// --- CHANGE 1: Added 'username' back to the User interface ---
 interface User {
-  id: string;
   username: string;
   email: string;
 }
@@ -10,7 +11,6 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => void;
   updateUserDetails: (details: any) => Promise<void>;
 }
@@ -22,95 +22,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    // Check if user is stored in localStorage
+    const storedToken = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+
+    if (storedToken && storedUser) {
       setUser(JSON.parse(storedUser));
       setIsAuthenticated(true);
+      axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
     }
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // Call the backend API for authentication
-      const response = await fetch('http://localhost:8000/api/auth/token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          username: email, // FastAPI OAuth2 expects 'username' field
-          password: password,
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Login failed');
+      const params = new URLSearchParams();
+      params.append('username', email);
+      params.append('password', password);
+
+      const response = await axios.post('http://localhost:8000/api/login', params);
+
+      if (response.data && response.data.access_token) {
+        const { access_token } = response.data;
+        
+        // --- CHANGE 2: Create a username from the email for display purposes ---
+        // Since the /login endpoint doesn't return the username, we'll derive it.
+        const username = email.split('@')[0];
+        
+        const newUser: User = { username, email };
+
+        localStorage.setItem('token', access_token);
+        localStorage.setItem('user', JSON.stringify(newUser));
+        axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+        
+        setUser(newUser);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error('Login response did not contain an access token.');
       }
-      
-      const data = await response.json();
-      
-      // Get user details with the token
-      const userResponse = await fetch('http://localhost:8000/api/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${data.access_token}`,
-        },
-      });
-      
-      if (!userResponse.ok) {
-        throw new Error('Failed to get user details');
-      }
-      
-      const userData = await userResponse.json();
-      
-      const user = {
-        id: userData.id,
-        username: userData.full_name,
-        email: userData.email,
-      };
-      
-      // Store token and user data
-      localStorage.setItem('token', data.access_token);
-      localStorage.setItem('user', JSON.stringify(user));
-      
-      setUser(user);
-      setIsAuthenticated(true);
+
     } catch (error) {
       console.error('Login failed:', error);
-      throw error;
-    }
-  };
-
-  const signup = async (username: string, email: string, password: string) => {
-    try {
-      // Call the backend API for registration
-      const response = await fetch('http://localhost:8000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          full_name: username,
-          email: email,
-          password: password,
-          // These fields are required by the UserBase model
-          date_of_birth: new Date().toISOString(), // Default value, should be updated later
-          phone_number: '', // Default value, should be updated later
-          gender: '', // Default value, should be updated later
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'Registration failed');
-      }
-      
-      const userData = await response.json();
-      
-      // After successful registration, log the user in
-      await login(email, password);
-    } catch (error) {
-      console.error('Signup failed:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      delete axios.defaults.headers.common['Authorization'];
       throw error;
     }
   };
@@ -119,34 +72,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
   };
 
   const updateUserDetails = async (details: any) => {
-    try {
-      // In a real app, this would be an API call
-      // For now, we'll just update the local state
-      if (user) {
-        const updatedUser = { ...user, ...details };
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-      }
-    } catch (error) {
-      console.error('Update user details failed:', error);
-      throw error;
+    if (user) {
+      const updatedUser = { ...user, ...details };
+      setUser(updatedUser);
+      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
+  const value = {
+    user,
+    isAuthenticated,
+    login,
+    logout,
+    updateUserDetails,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated,
-        login,
-        signup,
-        logout,
-        updateUserDetails,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

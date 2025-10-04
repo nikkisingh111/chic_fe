@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import theme from '../../styles/theme';
+import { useAuth } from '../../context/AuthContext'; // 1. Import useAuth to get the logout function
 
 interface NavbarProps {
   isLoggedIn: boolean;
@@ -57,7 +58,8 @@ const NavLink = styled(Link)`
   }
 `;
 
-const AuthButton = styled(Link)`
+// This component is for both Login and Logout buttons now
+const AuthButton = styled.button`
   background-color: ${theme.colors.primary};
   color: ${theme.colors.white};
   padding: ${theme.spacing.xs} ${theme.spacing.md};
@@ -65,6 +67,8 @@ const AuthButton = styled(Link)`
   font-weight: ${theme.fontWeights.medium};
   text-decoration: none;
   transition: background-color ${theme.transitions.short} ease-in-out;
+  border: none;
+  cursor: pointer;
 
   &:hover {
     background-color: #152a62; /* Darker shade of primary */
@@ -113,6 +117,19 @@ const MobileNavLink = styled(Link)`
   }
 `;
 
+// A styled div to make the mobile logout look like a link
+const MobileLogoutButton = styled.div`
+  color: ${theme.colors.text};
+  font-weight: ${theme.fontWeights.medium};
+  padding: ${theme.spacing.sm} 0;
+  cursor: pointer;
+
+  &:hover {
+    color: ${theme.colors.primary};
+  }
+`;
+
+
 const UserInfo = styled.div`
   display: flex;
   align-items: center;
@@ -124,15 +141,22 @@ const UserInfo = styled.div`
 const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, username }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  // 2. Get the logout function from our AuthContext
+  const { logout } = useAuth();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
+  // 3. Update the handleLogout function to use the context
   const handleLogout = () => {
-    // Implement logout logic here
-    // For now, just redirect to home
-    navigate('/');
+    logout(); // This clears the user's token and data
+    setIsMobileMenuOpen(false); // Close mobile menu if open
+    navigate('/login'); // Redirect the user to the login page
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
   };
 
   return (
@@ -150,10 +174,11 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, username }) => {
           {isLoggedIn ? (
             <UserInfo>
               <span>Welcome, {username}</span>
-              <AuthButton to="/" onClick={handleLogout}>Logout</AuthButton>
+              {/* 4. Ensure the logout button is a proper button */}
+              <AuthButton onClick={handleLogout}>Logout</AuthButton>
             </UserInfo>
           ) : (
-            <AuthButton to="/login">Login</AuthButton>
+            <AuthButton as={Link} to="/login">Login</AuthButton>
           )}
         </NavLinks>
 
@@ -174,12 +199,13 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, username }) => {
           
           {isLoggedIn ? (
             <>
-              <MobileNavLink to="#" onClick={() => {}}>
+              <MobileNavLink to="#" onClick={(e) => e.preventDefault()} style={{ cursor: 'default' }}>
                 Welcome, {username}
               </MobileNavLink>
-              <MobileNavLink to="/" onClick={handleLogout}>
+              {/* 5. Attach the real handleLogout to the mobile button */}
+              <MobileLogoutButton onClick={handleLogout}>
                 Logout
-              </MobileNavLink>
+              </MobileLogoutButton>
             </>
           ) : (
             <MobileNavLink to="/login" onClick={() => setIsMobileMenuOpen(false)}>

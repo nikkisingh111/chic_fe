@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CHIC — Your Body Profile (Desktop)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #edf2dc; /* page background */
+      --card: #ffffff;
+      --muted: #9aa095;
+      --accent: #6e735f; /* highlight */
+      --radius: 12px;
+      --gap: 18px;
+      --max: 1100px;
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    html,body{height:100%;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:#222;
+      padding:48px 24px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+    }
+
+    .container{
+      width:100%;
+      max-width:var(--max);
+      background:transparent;
+    }
+
+    header{ text-align:center; margin-bottom:28px; }
+    header h1{
+      font-family: 'Playfair Display', serif;
+      font-weight:700;
+      margin:0;
+      letter-spacing:0.4px;
+      font-size:30px;
+      color:var(--accent);
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:16px;
+      box-shadow:0 6px 20px rgba(20,20,20,0.06);
+      padding:26px;
+    }
+
+    .form-grid{
+      display:grid;
+      grid-template-columns: 220px 1fr;
+      gap:26px;
+      align-items:start;
+    }
+
+    label.col-label{
+      font-weight:600;
+      font-size:15px;
+      color:var(--accent);
+      padding-top:6px;
+    }
+
+    .controls{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    /* Age row */
+    .age-row{display:flex; gap:14px; align-items:center;}
+    .age-btn{
+      width:86px;
+      min-width:86px;
+      background:#fff;
+      border:1px solid #ececec;
+      border-radius:12px;
+      padding:12px 8px;
+      text-align:center;
+      cursor:pointer;
+      transition:all .18s ease;
+      box-shadow:0 2px 6px rgba(0,0,0,0.03);
+    }
+    .age-btn.selected{background:var(--accent); color:white; border-color:var(--accent);}
+    .age-btn .icon{display:block; font-size:18px; margin-bottom:6px;}
+    .age-btn .label{display:block; font-size:14px; color:inherit;}
+
+    /* Gender and occupation */
+    .btn-row{display:flex; gap:12px; flex-wrap:wrap}
+    .pill{
+      background:#fff;
+      border:1px solid #e8e8e8;
+      border-radius:12px;
+      padding:12px 18px;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      min-height:48px;
+      box-shadow:0 2px 6px rgba(16,16,16,0.03);
+    }
+    .pill .ic{width:22px; height:22px; opacity:0.7}
+    .pill.selected{border-color:var(--accent); background:linear-gradient(180deg, rgba(110,115,95,0.06), rgba(110,115,95,0.02));}
+    .pill.selected .label{color:var(--accent); font-weight:600}
+
+    /* Body shape grid */
+    .shapes-grid{display:grid; grid-template-columns:repeat(3, 1fr); gap:14px;}
+    .shape-card{
+      background:#fff;
+      border-radius:12px;
+      border:1px solid #ececec;
+      padding:14px;
+      height:128px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+      cursor:pointer;
+    }
+    .shape-card .icon{width:56px; height:72px; margin-bottom:10px; opacity:0.9}
+    .shape-card .label{font-size:14px; color:#444}
+    .shape-card.selected{border-color:var(--accent); box-shadow:0 6px 18px rgba(110,115,95,0.06);}
+
+    /* body-size */
+    .size-row{display:flex; gap:12px}
+    .size-card{background:#fff;border:1px solid #ececec;padding:12px 18px;border-radius:12px;cursor:pointer;min-width:120px;text-align:center}
+    .size-card.selected{border-color:var(--accent);background:linear-gradient(180deg, rgba(110,115,95,0.06), rgba(110,115,95,0.02));}
+
+    /* Footer / submit */
+    .form-actions{display:flex; justify-content:flex-end; margin-top:18px}
+    .submit-btn{background:var(--accent); color:white; border:none; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:600}
+
+    /* responsive small tweak */
+    @media (max-width:1000px){
+      .form-grid{grid-template-columns:1fr;}
+      .shapes-grid{grid-template-columns:repeat(3,1fr)}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>YOUR BODY PROFILE</h1>
+    </header>
+
+    <div class="card">
+      <div class="form-grid">
+        <div>
+          <div style="padding:8px 6px;">
+            <div class="col-label">AGE</div>
+          </div>
+          <div style="padding:8px 6px; margin-top:14px;">
+            <div class="col-label">GENDER</div>
+          </div>
+          <div style="padding:8px 6px; margin-top:14px;">
+            <div class="col-label">WHAT DO YOU DO?</div>
+          </div>
+          <div style="padding:8px 6px; margin-top:14px;">
+            <div class="col-label">BODY SHAPE</div>
+          </div>
+          <div style="padding:8px 6px; margin-top:14px;">
+            <div class="col-label">BODY SIZE</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <!-- AGE -->
+          <div class="age-row" id="ageRow">
+            <div class="age-btn" data-value="lt18">
+              <div class="icon">👤</div>
+              <div class="label">&lt;18</div>
+            </div>
+            <div class="age-btn" data-value="18-25">
+              <div class="icon">👤</div>
+              <div class="label">18-25</div>
+            </div>
+            <div class="age-btn selected" data-value="25-35">
+              <div class="icon">👤</div>
+              <div class="label">25-35</div>
+            </div>
+            <div class="age-btn" data-value="36-45">
+              <div class="icon">👤</div>
+              <div class="label">36-45</div>
+            </div>
+            <div class="age-btn" data-value="45plus">
+              <div class="icon">👤</div>
+              <div class="label">45+</div>
+            </div>
+          </div>
+
+          <!-- GENDER -->
+          <div class="btn-row">
+            <div class="pill selected" data-value="female">
+              <svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3" fill="currentColor" style="color:#c79ea6"></circle></svg>
+              <div class="label">Female</div>
+            </div>
+            <div class="pill" data-value="male">
+              <svg class="ic" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="7" r="3" fill="currentColor" style="color:#9fb5c9"></circle></svg>
+              <div class="label">Male</div>
+            </div>
+          </div>
+
+          <!-- WHAT DO YOU DO -->
+          <div class="btn-row">
+            <div class="pill selected" data-value="college"> <svg class="ic" viewBox="0 0 24 24"><path d="M12 2 L2 7 L12 12 L22 7 L12 2 Z" fill="#ddd"></path></svg> <div class="label">College student</div></div>
+            <div class="pill" data-value="working"> <svg class="ic" viewBox="0 0 24 24"><rect width="18" height="12" x="3" y="6" rx="2" ry="2" fill="#ddd"></rect></svg> <div class="label">Working Professional</div></div>
+          </div>
+          <div class="btn-row">
+            <div class="pill" data-value="school"> <svg class="ic" viewBox="0 0 24 24"><rect width="18" height="12" x="3" y="6" rx="2" ry="2" fill="#eee"></rect></svg> <div class="label">School Student</div></div>
+            <div class="pill" data-value="other"> <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="#eee"></circle></svg> <div class="label">Other</div></div>
+          </div>
+
+          <!-- BODY SHAPE -->
+          <div class="shapes-grid" id="shapesGrid">
+            <!-- Rectangle -->
+            <div class="shape-card selected" data-value="rectangle">
+              <svg class="icon" viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg">
+                <!-- simple torso silhouette -->
+                <g fill="#d9d9d9">
+                  <path d="M40 6c6 0 12 10 12 18v52c0 6-2 10-6 14H34c-4-4-6-8-6-14V24c0-8 6-18 12-18z"/>
+                </g>
+                <!-- dashed rectangle overlay -->
+                <rect x="24" y="30" width="32" height="44" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 4" rx="2"/>
+              </svg>
+              <div class="label">Rectangle</div>
+            </div>
+
+            <!-- Oval -->
+            <div class="shape-card" data-value="oval">
+              <svg class="icon" viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#d9d9d9"><path d="M40 6c8 0 16 8 16 18v44c0 10-8 18-16 18s-16-8-16-18V24c0-10 8-18 16-18z"/></g>
+                <ellipse cx="40" cy="54" rx="20" ry="36" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 4"/>
+              </svg>
+              <div class="label">Oval</div>
+            </div>
+
+            <!-- Triangle -->
+            <div class="shape-card" data-value="triangle">
+              <svg class="icon" viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#d9d9d9"><path d="M40 6c6 0 10 8 12 14l0 60c-2 6-6 10-12 10s-10-4-12-10V20c2-6 6-14 12-14z"/></g>
+                <path d="M40 32 L56 78 L24 78 Z" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 4"/>
+              </svg>
+              <div class="label">Triangle</div>
+            </div>
+
+            <!-- Trapezoid -->
+            <div class="shape-card" data-value="trapezoid">
+              <svg class="icon" viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#d9d9d9"><path d="M40 6c-6 0-10 8-12 14v52c2 6 6 10 12 10s10-4 12-10V20c-2-6-6-14-12-14z"/></g>
+                <path d="M28 30 L52 30 L44 78 L36 78 Z" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 4"/>
+              </svg>
+              <div class="label">Trapezoid</div>
+            </div>
+
+            <!-- V-shape -->
+            <div class="shape-card" data-value="vshape">
+              <svg class="icon" viewBox="0 0 80 104" xmlns="http://www.w3.org/2000/svg">
+                <g fill="#d9d9d9"><path d="M40 6c8 0 14 8 18 18v18c-4 10-10 18-18 18s-14-8-18-18V24c4-10 10-18 18-18z"/></g>
+                <path d="M28 30 L52 30 L40 78 Z" fill="none" stroke="#7a7a7a" stroke-width="2" stroke-dasharray="4 4"/>
+              </svg>
+              <div class="label">V-shape</div>
+            </div>
+
+          </div>
+
+          <!-- BODY SIZE -->
+          <div class="size-row" style="margin-top:8px;">
+            <div class="size-card" data-value="skinny">Skinny</div>
+            <div class="size-card selected" data-value="average">Average</div>
+            <div class="size-card" data-value="plus">Plus Size</div>
+          </div>
+
+          <div class="form-actions">
+            <button class="submit-btn">Save profile</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Generic single-select toggles (age, gender, occupation, shape, size)
+  function singleSelect(containerSelector, itemSelector){
+    const container = document.querySelector(containerSelector);
+    if(!container) return;
+    container.addEventListener('click', e =>{
+      const item = e.target.closest(itemSelector);
+      if(!item) return;
+      // remove selected
+      container.querySelectorAll(itemSelector).forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+    });
+  }
+
+  singleSelect('#ageRow', '.age-btn');
+  singleSelect('body', '.pill'); // pill selection for gender + occupations
+  singleSelect('#shapesGrid', '.shape-card');
+  singleSelect('.size-row', '.size-card');
+
+  // Ensure only one occupation is selected (if you want multi-select change this logic)
+  // The generic singleSelect above already enforces single selection for .pill elements.
+
+  // Optional: handle Save button to collect values
+  document.querySelector('.submit-btn').addEventListener('click', () =>{
+    const getSel = (sel, attr='data-value') => {
+      const el = document.querySelector(sel+' .selected') || document.querySelector(sel + ' .selected');
+      if(!el) return null;
+      return el.getAttribute(attr) || el.textContent.trim();
+    }
+    const age = document.querySelector('#ageRow .selected')?.getAttribute('data-value') || null;
+    const gender = document.querySelector('.pill.selected')?.getAttribute('data-value') || null;
+    const occupation = Array.from(document.querySelectorAll('.btn-row .pill.selected')).map(x=>x.getAttribute('data-value'))[0] || null;
+    const shape = document.querySelector('#shapesGrid .selected')?.getAttribute('data-value') || null;
+    const size = document.querySelector('.size-row .selected')?.getAttribute('data-value') || null;
+    alert('Profile saved:\nAge: '+age+'\nGender: '+gender+'\nOccupation: '+occupation+'\nBody shape: '+shape+'\nBody size: '+size);
+  });
+</script>
+
+</body>
+</html>

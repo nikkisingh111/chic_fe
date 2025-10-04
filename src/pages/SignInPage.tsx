@@ -5,203 +5,154 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import Layout from '../components/layout/Layout';
 import theme from '../styles/theme';
-import {
-  Container,
-  Card,
-  Title,
-  FormGroup,
-  Label,
-  Input,
-  PrimaryButton,
-  ErrorText,
-  Text,
-} from '../components/styled/Common';
+import { Card, Title, FormGroup, Label, Input, PrimaryButton, ErrorText, Text } from '../components/styled/Common';
 
-const SignInContainer = styled(Container)`
+const signinImage = '/images/signin_page_image.png';
+
+interface SignInFormValues {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  password: string;
+  confirm_password: string;
+}
+
+// Styled-components for layout and styling
+const SignInContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 300px);
+  min-height: calc(100vh - 200px);
   padding: ${theme.spacing.xl} ${theme.spacing.md};
 `;
 
 const SignInCard = styled(Card)`
   width: 100%;
-  max-width: 600px;
-  padding: ${theme.spacing.xl};
+  max-width: 900px;
+  padding: 0;
+  display: flex;
+  overflow: hidden;
   box-shadow: ${theme.shadows.large};
+`;
+
+const SignInImageContainer = styled.div`
+  flex: 1;
+  display: flex;
+  @media (max-width: ${theme.breakpoints.md}) { display: none; }
+`;
+
+const SignInImage = styled.img`
+  width: 100%;
+  object-fit: cover;
+`;
+
+const SignInFormContainer = styled.div`
+  flex: 1;
+  padding: ${theme.spacing.xl};
 `;
 
 const StyledForm = styled(Form)`
   width: 100%;
 `;
 
-const StyledField = styled(Field)`
-  width: 100%;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  font-size: ${theme.fontSizes.medium};
-  border: 1px solid ${theme.colors.secondary};
-  border-radius: ${theme.borderRadius.medium};
-  background-color: ${theme.colors.white};
-  transition: border-color ${theme.transitions.short} ease-in-out;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
-  }
-`;
+// --- CHANGE 1: REMOVED the problematic 'StyledField' component ---
+// We will now use the <Field> component from Formik directly.
 
-const SignInButton = styled(PrimaryButton)`
+const Button = styled(PrimaryButton)`
   width: 100%;
   margin-top: ${theme.spacing.md};
-  padding: ${theme.spacing.md};
 `;
-
-const LoginText = styled(Text)`
-  text-align: center;
-  margin-top: ${theme.spacing.lg};
-`;
-
-const LoginLink = styled(Link)`
-  color: ${theme.colors.primary};
-  font-weight: ${theme.fontWeights.medium};
-`;
-
-const TermsText = styled(Text)`
-  font-size: ${theme.fontSizes.small};
-  text-align: center;
-  margin-top: ${theme.spacing.md};
-  color: ${theme.colors.secondary};
-`;
-
-const TermsLink = styled(Link)`
-  color: ${theme.colors.primary};
-  font-weight: ${theme.fontWeights.medium};
-`;
-
-interface SignInFormValues {
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-}
 
 const validationSchema = Yup.object({
-  username: Yup.string().required('Username is required').min(3, 'Username must be at least 3 characters'),
+  first_name: Yup.string().required('First name is required'),
+  last_name: Yup.string().required('Last name is required'),
   email: Yup.string().email('Invalid email address').required('Email is required'),
-  password: Yup.string()
-    .required('Password is required')
-    .min(8, 'Password must be at least 8 characters')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
-    ),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password')], 'Passwords must match')
-    .required('Confirm password is required'),
+  phone_number: Yup.string().required('Phone number is required'),
+  password: Yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
+  confirm_password: Yup.string()
+    .oneOf([Yup.ref('password'), undefined], 'Passwords must match') // Updated to handle empty initial value
+    .required('Please confirm your password'),
 });
 
 const SignInPage: React.FC = () => {
   const navigate = useNavigate();
 
-  const initialValues: SignInFormValues = {
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  };
-
   const handleSubmit = (values: SignInFormValues) => {
-    // Store the form values in session storage to use in the next step
-    sessionStorage.setItem('signupData', JSON.stringify({
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    }));
-    
-    // Navigate to the next step (additional details form)
-    navigate('/signin-details');
+    console.log('Form submitted successfully with these values:', values);
+    navigate('/signin-details', { state: { step1Data: values } });
+  };
+  
+  const initialValues: SignInFormValues = {
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+    password: '',
+    confirm_password: '',
   };
 
   return (
     <Layout>
       <SignInContainer>
         <SignInCard>
-          <Title>Create an Account</Title>
-          <Text>Join Virtual Stylish to discover your perfect style</Text>
-          
-          <Formik
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            onSubmit={handleSubmit}
-          >
-            {({ isSubmitting }) => (
-              <StyledForm>
-                <FormGroup>
-                  <Label htmlFor="username">Username</Label>
-                  <StyledField
-                    type="text"
-                    id="username"
-                    name="username"
-                    placeholder="Choose a username"
-                    as={Input}
-                  />
-                  <ErrorMessage name="username" component={ErrorText} />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label htmlFor="email">Email</Label>
-                  <StyledField
-                    type="email"
-                    id="email"
-                    name="email"
-                    placeholder="Enter your email"
-                    as={Input}
-                  />
-                  <ErrorMessage name="email" component={ErrorText} />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label htmlFor="password">Password</Label>
-                  <StyledField
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Create a password"
-                    as={Input}
-                  />
-                  <ErrorMessage name="password" component={ErrorText} />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <StyledField
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    placeholder="Confirm your password"
-                    as={Input}
-                  />
-                  <ErrorMessage name="confirmPassword" component={ErrorText} />
-                </FormGroup>
-                
-                <SignInButton type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating Account...' : 'Continue'}
-                </SignInButton>
-                
-                <TermsText>
-                  By signing up, you agree to our{' '}
-                  <TermsLink to="/terms">Terms of Service</TermsLink> and{' '}
-                  <TermsLink to="/privacy">Privacy Policy</TermsLink>
-                </TermsText>
-              </StyledForm>
-            )}
-          </Formik>
-          
-          <LoginText>
-            Already have an account? <LoginLink to="/login">Sign in</LoginLink>
-          </LoginText>
+          <SignInImageContainer>
+            <SignInImage src={signinImage} alt="Sign In" />
+          </SignInImageContainer>
+          <SignInFormContainer>
+            <Title>Create Your Account</Title>
+            <Text>Let's get started with your fashion journey.</Text>
+            
+            <Formik
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+            >
+              {({ isSubmitting }) => (
+                <StyledForm>
+                  {/* I have removed the <pre> debugging block as it's no longer needed */}
+                  
+                  {/* --- CHANGE 2: Replaced <StyledField> with <Field> throughout the form --- */}
+                  <FormGroup>
+                    <Label htmlFor="first_name">First Name</Label>
+                    <Field type="text" id="first_name" name="first_name" as={Input} />
+                    <ErrorMessage name="first_name" component={ErrorText} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label htmlFor="last_name">Last Name</Label>
+                    <Field type="text" id="last_name" name="last_name" as={Input} />
+                    <ErrorMessage name="last_name" component={ErrorText} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label htmlFor="email">Email</Label>
+                    <Field type="email" id="email" name="email" as={Input} />
+                    <ErrorMessage name="email" component={ErrorText} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label htmlFor="phone_number">Phone Number</Label>
+                    <Field type="tel" id="phone_number" name="phone_number" as={Input} />
+                    <ErrorMessage name="phone_number" component={ErrorText} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label htmlFor="password">Password</Label>
+                    <Field type="password" id="password" name="password" as={Input} />
+                    <ErrorMessage name="password" component={ErrorText} />
+                  </FormGroup>
+                  <FormGroup>
+                    <Label htmlFor="confirm_password">Confirm Password</Label>
+                    <Field type="password" id="confirm_password" name="confirm_password" as={Input} />
+                    <ErrorMessage name="confirm_password" component={ErrorText} />
+                  </FormGroup>
+                  <Button type="submit" disabled={isSubmitting}>
+                    Next Step
+                  </Button>
+                   <Text style={{ textAlign: 'center', marginTop: '1rem' }}>
+                      Already have an account? <Link to="/login" style={{color: theme.colors.primary}}>Log In</Link>
+                  </Text>
+                </StyledForm>
+              )}
+            </Formik>
+          </SignInFormContainer>
         </SignInCard>
       </SignInContainer>
     </Layout>

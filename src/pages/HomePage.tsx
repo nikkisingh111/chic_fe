@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import Layout from '../components/layout/Layout';
@@ -6,11 +6,36 @@ import { useAuth } from '../context/AuthContext';
 import theme from '../styles/theme';
 import { Container, PrimaryButton, SecondaryButton, Title, Text } from '../components/styled/Common';
 
-// Import images
-const homeImage1 = '/images/home_image1.png';
-const homeImage2 = '/images/home_image2.png';
-const homeImage3 = '/images/home_image3.png';
-const homeImage4 = '/images/home_image4.png';
+// An array of the hero images for easy shuffling
+const heroImages = [
+    '/images/home_image1.png',
+    '/images/home_image2.png',
+    '/images/home_image3.png',
+    '/images/home_image4.png',
+];
+
+// A data array for the testimonials section for easier management
+const testimonials = [
+    {
+        quote: "CHIC completely transformed my wardrobe. I now feel confident in my style choices and receive compliments regularly!",
+        avatar: '/images/sarah.png', // Assumes a new portrait image
+        name: 'Sarah J.',
+        role: 'Marketing Professional',
+    },
+    {
+        quote: "As someone who always struggled with fashion, this app has been a game-changer. The personalized recommendations are spot on!",
+        avatar: '/images/michael.png', // Assumes a new portrait image
+        name: 'Michael T.',
+        role: 'Software Engineer',
+    },
+    {
+        quote: "I love how the app considers my body type and personal preferences. It's like having a personal stylist in my pocket!",
+        avatar: '/images/jessica.png', // Assumes a new portrait image
+        name: 'Jessica L.',
+        role: 'Teacher',
+    }
+];
+
 
 const HeroSection = styled.section`
   background-color: ${theme.colors.cream};
@@ -34,15 +59,27 @@ const HeroText = styled.div`
   flex: 1;
 `;
 
-const HeroImage = styled.img`
+const HeroImageSlider = styled.div`
   flex: 1;
   max-width: 500px;
   border-radius: ${theme.borderRadius.medium};
   box-shadow: ${theme.shadows.medium};
-  
+  overflow: hidden; /* This hides the other images */
+
   @media (max-width: ${theme.breakpoints.md}) {
     max-width: 100%;
   }
+`;
+
+const HeroImageTrack = styled.div`
+  display: flex;
+  transition: transform 0.8s ease-in-out; /* Controls the smooth slide */
+`;
+
+const HeroImage = styled.img`
+  width: 100%;      /* Each image takes the full width of the slider */
+  flex-shrink: 0;   /* Prevents images from shrinking */
+  object-fit: cover;
 `;
 
 const ButtonGroup = styled.div`
@@ -177,6 +214,15 @@ const CTAText = styled.p`
 
 const HomePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % heroImages.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <Layout isLoggedIn={isAuthenticated} username={user?.username}>
@@ -186,7 +232,7 @@ const HomePage: React.FC = () => {
             <HeroText>
               <Title>Discover Your Perfect Style</Title>
               <Text>
-                Virtual Stylish helps you find the perfect outfit for any occasion. Our AI-powered
+                CHIC helps you find the perfect outfit for any occasion. Our AI-powered
                 platform analyzes your preferences and provides personalized style recommendations.
               </Text>
               <ButtonGroup>
@@ -199,14 +245,21 @@ const HomePage: React.FC = () => {
                     <PrimaryButton as={Link} to="/login">
                       Get Started
                     </PrimaryButton>
-                    <SecondaryButton as={Link} to="/signup">
+                    {/* --- FIX 1: Corrected link from "/signup" to "/signin" --- */}
+                    <SecondaryButton as={Link} to="/signin">
                       Sign Up
                     </SecondaryButton>
                   </>
                 )}
               </ButtonGroup>
             </HeroText>
-            <HeroImage src={homeImage1} alt="Virtual Stylish" />
+            <HeroImageSlider>
+              <HeroImageTrack style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}>
+                {heroImages.map((src) => (
+                  <HeroImage key={src} src={src} alt="CHIC" />
+                ))}
+              </HeroImageTrack>
+            </HeroImageSlider>
           </HeroContent>
         </Container>
       </HeroSection>
@@ -215,7 +268,7 @@ const HomePage: React.FC = () => {
         <Container>
           <Title style={{ textAlign: 'center' }}>Our Features</Title>
           <Text style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto' }}>
-            Discover how Virtual Stylish can transform your wardrobe and style experience.
+            Discover how CHIC can transform your wardrobe and style experience.
           </Text>
           <FeatureGrid>
             <FeatureCard>
@@ -224,13 +277,6 @@ const HomePage: React.FC = () => {
               <Text>
                 Get clothing recommendations tailored to your body type, style preferences, and
                 occasion.
-              </Text>
-            </FeatureCard>
-            <FeatureCard>
-              <FeatureIcon>🎨</FeatureIcon>
-              <FeatureTitle>Color Coordination</FeatureTitle>
-              <Text>
-                Learn which colors work best for you and how to coordinate them for a cohesive look.
               </Text>
             </FeatureCard>
             <FeatureCard>
@@ -257,45 +303,20 @@ const HomePage: React.FC = () => {
         <Container>
           <Title style={{ textAlign: 'center' }}>What Our Users Say</Title>
           <TestimonialGrid>
-            <TestimonialCard>
-              <TestimonialText>
-                "Virtual Stylish completely transformed my wardrobe. I now feel confident in my style
-                choices and receive compliments regularly!"
-              </TestimonialText>
-              <TestimonialAuthor>
-                <TestimonialAvatar src={homeImage2} alt="Sarah J." />
-                <TestimonialInfo>
-                  <TestimonialName>Sarah J.</TestimonialName>
-                  <TestimonialRole>Marketing Professional</TestimonialRole>
-                </TestimonialInfo>
-              </TestimonialAuthor>
-            </TestimonialCard>
-            <TestimonialCard>
-              <TestimonialText>
-                "As someone who always struggled with fashion, this app has been a game-changer. The
-                personalized recommendations are spot on!"
-              </TestimonialText>
-              <TestimonialAuthor>
-                <TestimonialAvatar src={homeImage3} alt="Michael T." />
-                <TestimonialInfo>
-                  <TestimonialName>Michael T.</TestimonialName>
-                  <TestimonialRole>Software Engineer</TestimonialRole>
-                </TestimonialInfo>
-              </TestimonialAuthor>
-            </TestimonialCard>
-            <TestimonialCard>
-              <TestimonialText>
-                "I love how the app considers my body type and personal preferences. It's like having
-                a personal stylist in my pocket!"
-              </TestimonialText>
-              <TestimonialAuthor>
-                <TestimonialAvatar src={homeImage4} alt="Jessica L." />
-                <TestimonialInfo>
-                  <TestimonialName>Jessica L.</TestimonialName>
-                  <TestimonialRole>Teacher</TestimonialRole>
-                </TestimonialInfo>
-              </TestimonialAuthor>
-            </TestimonialCard>
+            {testimonials.map((testimonial, index) => (
+              <TestimonialCard key={index}>
+                <TestimonialText>
+                  "{testimonial.quote}"
+                </TestimonialText>
+                <TestimonialAuthor>
+                  <TestimonialAvatar src={testimonial.avatar} alt={testimonial.name} />
+                  <TestimonialInfo>
+                    <TestimonialName>{testimonial.name}</TestimonialName>
+                    <TestimonialRole>{testimonial.role}</TestimonialRole>
+                  </TestimonialInfo>
+                </TestimonialAuthor>
+              </TestimonialCard>
+            ))}
           </TestimonialGrid>
         </Container>
       </TestimonialsSection>
@@ -310,7 +331,8 @@ const HomePage: React.FC = () => {
           {!isAuthenticated && (
             <PrimaryButton
               as={Link}
-              to="/signup"
+              // --- FIX 2: Corrected link from "/signup" to "/signin" ---
+              to="/signin"
               style={{ backgroundColor: theme.colors.white, color: theme.colors.primary }}
             >
               Sign Up Now

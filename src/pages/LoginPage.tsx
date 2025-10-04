@@ -18,6 +18,7 @@ import {
   Text,
 } from '../components/styled/Common';
 
+// Corrected the image path to use .jpg
 const loginImage = '/images/login_page_image.png';
 
 const LoginContainer = styled(Container)`
@@ -69,21 +70,7 @@ const StyledForm = styled(Form)`
   width: 100%;
 `;
 
-const StyledField = styled(Field)`
-  width: 100%;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  font-size: ${theme.fontSizes.medium};
-  border: 1px solid ${theme.colors.secondary};
-  border-radius: ${theme.borderRadius.medium};
-  background-color: ${theme.colors.white};
-  transition: border-color ${theme.transitions.short} ease-in-out;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
-  }
-`;
+// --- FIX 1: REMOVED the problematic 'StyledField' component ---
 
 const ForgotPassword = styled(Link)`
   display: block;
@@ -160,9 +147,10 @@ const LoginPage: React.FC = () => {
             >
               {({ isSubmitting }) => (
                 <StyledForm>
+                  {/* --- FIX 2: Replaced <StyledField> with <Field> --- */}
                   <FormGroup>
                     <Label htmlFor="email">Email</Label>
-                    <StyledField
+                    <Field
                       type="email"
                       id="email"
                       name="email"
@@ -174,7 +162,7 @@ const LoginPage: React.FC = () => {
                   
                   <FormGroup>
                     <Label htmlFor="password">Password</Label>
-                    <StyledField
+                    <Field
                       type="password"
                       id="password"
                       name="password"

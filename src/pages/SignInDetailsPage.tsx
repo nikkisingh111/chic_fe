@@ -1,395 +1,302 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import styled from 'styled-components';
-import { Formik, Form, Field, ErrorMessage } from 'formik';
-import * as Yup from 'yup';
+import axios from 'axios';
 import Layout from '../components/layout/Layout';
-import { useAuth } from '../context/AuthContext';
 import theme from '../styles/theme';
-import {
-  Container,
-  Card,
-  Title,
-  FormGroup,
-  Label,
-  Input,
-  PrimaryButton,
-  ErrorText,
-  Text,
-} from '../components/styled/Common';
+import { Card, Title, PrimaryButton, ErrorText, Text } from '../components/styled/Common';
+import { FaUserGraduate, FaBriefcase, FaChild, FaQuestionCircle, FaFemale, FaMale, FaUser, FaCheck } from 'react-icons/fa';
 
-const DetailsContainer = styled(Container)`
+// --- STYLED COMPONENTS (with new additions) ---
+
+// This button is for options with text and an icon (e.g., Age, Gender, Occupation)
+const OptionButton = styled.button<{ isSelected: boolean }>`
+  border: 1px solid ${({ isSelected }) => (isSelected ? theme.colors.primary : theme.colors.secondary)};
+  background-color: ${({ isSelected }) => (isSelected ? theme.colors.primary : theme.colors.white)};
+  color: ${({ isSelected }) => (isSelected ? theme.colors.white : theme.colors.text)};
+  border-radius: ${theme.borderRadius.medium};
+  padding: ${theme.spacing.sm};
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-size: ${theme.fontSizes.small};
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.xs};
+  min-height: 80px;
+
+  &:hover {
+    border-color: ${theme.colors.primary};
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+// --- NEW --- This button is for the larger, image-only options
+const ImageOptionButton = styled.button<{ isSelected: boolean }>`
+  border: 2px solid ${({ isSelected }) => (isSelected ? theme.colors.primary : 'transparent')};
+  background-color: ${theme.colors.background};
+  border-radius: ${theme.borderRadius.medium};
+  padding: ${theme.spacing.xs};
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: ${theme.spacing.xs};
+  font-size: ${theme.fontSizes.small};
+  font-weight: ${theme.fontWeights.medium};
+  
+  &:hover {
+    border-color: ${theme.colors.secondary};
+  }
+
+  img {
+    width: 80px;  // Increased image width
+    height: 80px; // Increased image height
+    object-fit: contain;
+    border-radius: ${theme.borderRadius.small};
+  }
+`;
+
+// --- NEW --- This button is for the skin color swatches
+const ColorButton = styled.button<{ color: string; isSelected: boolean }>`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: ${({ color }) => color};
+  border: 3px solid ${({ isSelected, theme }) => (isSelected ? theme.colors.primary : theme.colors.white)};
+  box-shadow: ${theme.shadows.small};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
+const DetailsContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 300px);
   padding: ${theme.spacing.xl} ${theme.spacing.md};
 `;
 
 const DetailsCard = styled(Card)`
   width: 100%;
-  max-width: 700px;
+  max-width: 800px;
   padding: ${theme.spacing.xl};
-  box-shadow: ${theme.shadows.large};
 `;
 
-const StyledForm = styled(Form)`
-  width: 100%;
-`;
-
-const StyledField = styled(Field)`
-  width: 100%;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  font-size: ${theme.fontSizes.medium};
-  border: 1px solid ${theme.colors.secondary};
-  border-radius: ${theme.borderRadius.medium};
-  background-color: ${theme.colors.white};
-  transition: border-color ${theme.transitions.short} ease-in-out;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
-  }
-`;
-
-const FormRow = styled.div`
+const SectionRow = styled.div`
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: ${theme.spacing.md};
-  
+  grid-template-columns: 150px 1fr;
+  align-items: center;
+  margin-bottom: ${theme.spacing.lg};
+
   @media (max-width: ${theme.breakpoints.sm}) {
     grid-template-columns: 1fr;
+    gap: ${theme.spacing.sm};
   }
 `;
 
-const RadioGroup = styled.div`
-  display: flex;
-  gap: ${theme.spacing.md};
-  margin-top: ${theme.spacing.xs};
-`;
-
-const RadioLabel = styled.label`
-  display: flex;
-  align-items: center;
-  gap: ${theme.spacing.xs};
-  cursor: pointer;
-`;
-
-const RadioInput = styled.input`
-  cursor: pointer;
-`;
-
-const SelectWrapper = styled.div`
-  position: relative;
-  
-  &::after {
-    content: '▼';
-    font-size: 0.8em;
-    position: absolute;
-    right: ${theme.spacing.md};
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    color: ${theme.colors.secondary};
-  }
-`;
-
-const StyledSelect = styled(Field)`
-  width: 100%;
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
+const SectionTitle = styled.h3`
   font-size: ${theme.fontSizes.medium};
-  border: 1px solid ${theme.colors.secondary};
-  border-radius: ${theme.borderRadius.medium};
-  background-color: ${theme.colors.white};
-  appearance: none;
-  cursor: pointer;
-  
-  &:focus {
-    outline: none;
-    border-color: ${theme.colors.primary};
-    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.2);
-  }
+  color: ${theme.colors.text};
+  font-weight: ${theme.fontWeights.bold};
+  text-transform: uppercase;
 `;
 
-const SubmitButton = styled(PrimaryButton)`
-  width: 100%;
+const OptionsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: ${theme.spacing.md};
+`;
+
+const ButtonGroup = styled.div`
+  display: flex;
+  justify-content: space-between;
   margin-top: ${theme.spacing.lg};
-  padding: ${theme.spacing.md};
 `;
 
-interface SignInDetailsFormValues {
-  firstName: string;
-  lastName: string;
-  gender: string;
-  age: string;
-  phoneNumber: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  stylePreference: string;
-}
+const BackButton = styled.button`
+  background: none;
+  border: none;
+  color: ${theme.colors.primary};
+  cursor: pointer;
+  font-size: ${theme.fontSizes.medium};
+`;
 
-const validationSchema = Yup.object({
-  firstName: Yup.string().required('First name is required'),
-  lastName: Yup.string().required('Last name is required'),
-  gender: Yup.string().required('Gender is required'),
-  age: Yup.number()
-    .typeError('Age must be a number')
-    .required('Age is required')
-    .min(13, 'You must be at least 13 years old')
-    .max(120, 'Please enter a valid age'),
-  phoneNumber: Yup.string().required('Phone number is required'),
-  address: Yup.string().required('Address is required'),
-  city: Yup.string().required('City is required'),
-  state: Yup.string().required('State is required'),
-  zipCode: Yup.string().required('ZIP code is required'),
-  country: Yup.string().required('Country is required'),
-  stylePreference: Yup.string().required('Style preference is required'),
-});
+// --- NEW --- Color array sorted from lightest to darkest
+const skinTones = [
+  "#e6c6bf", "#d4afa3", "#c5a691", "#be9d86", "#b1886c", 
+  "#a87f64", "#946c51", "#876249", "#775741"
+];
 
+
+// --- MAIN COMPONENT ---
 const SignInDetailsPage: React.FC = () => {
-  const { signup } = useAuth();
   const navigate = useNavigate();
-  const [signupData, setSignupData] = useState<any>(null);
+  const location = useLocation();
+  const step1Data = location.state?.step1Data;
 
-  useEffect(() => {
-    // Retrieve the data from the previous step
-    const storedData = sessionStorage.getItem('signupData');
-    if (!storedData) {
-      // If no data is found, redirect back to the signup page
-      navigate('/signin');
-      return;
-    }
-    
-    setSignupData(JSON.parse(storedData));
-  }, [navigate]);
+  // --- UPDATED --- Added skin_colour to the state
+  const [details, setDetails] = useState({
+    age: '25-35',
+    gender: 'Female',
+    occupation: 'Working Professional',
+    face_shape: 'Oval',
+    body_shape: 'Rectangle',
+    body_size: 'Average',
+    skin_colour: skinTones[0], // Default to the lightest skin tone
+  });
 
-  const initialValues: SignInDetailsFormValues = {
-    firstName: '',
-    lastName: '',
-    gender: '',
-    age: '',
-    phoneNumber: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
-    stylePreference: '',
-  };
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (values: SignInDetailsFormValues) => {
-    try {
-      if (signupData) {
-        // Combine data from both forms
-        const userData = {
-          ...signupData,
-          ...values,
-        };
-        
-        // Format the data for the backend API
-        const fullName = `${values.firstName} ${values.lastName}`;
-        const dateOfBirth = new Date();
-        dateOfBirth.setFullYear(new Date().getFullYear() - parseInt(values.age));
-        
-        // Call the signup function from the auth context with the required fields
-        await signup(fullName, signupData.email, signupData.password);
-        
-        // Clear the session storage
-        sessionStorage.removeItem('signupData');
-        
-        // Redirect to the dashboard page
-        navigate('/dashboard');
-      }
-    } catch (error) {
-      console.error('Error during signup:', error);
-    }
-  };
-
-  if (!signupData) {
-    return null; // Or a loading spinner
+  if (!step1Data) {
+    return <p>Please complete the first step of registration. <Link to="/signin">Go back</Link></p>;
   }
+
+  const handleSelect = (field: string, value: string) => {
+    setDetails(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async () => {
+    setError(null);
+    const finalData = { ...step1Data, ...details };
+
+    try {
+      await axios.post('http://localhost:8000/api/signup', finalData);
+      navigate('/login');
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'An error occurred during sign up.');
+      console.error('Signup error:', err);
+    }
+  };
 
   return (
     <Layout>
       <DetailsContainer>
         <DetailsCard>
-          <Title>Complete Your Profile</Title>
-          <Text>Tell us more about yourself to personalize your experience</Text>
+          <Title>Your Body Profile</Title>
+          <Text>This helps us personalize your style.</Text>
+
+          {/* AGE */}
+          <SectionRow>
+            <SectionTitle>Age</SectionTitle>
+            <OptionsGrid>
+              {['<18', '18-25', '25-35', '36-45', '45+'].map(age => (
+                <OptionButton key={age} isSelected={details.age === age} onClick={() => handleSelect('age', age)}>
+                  <FaUser />
+                  {age}
+                </OptionButton>
+              ))}
+            </OptionsGrid>
+          </SectionRow>
+
+          {/* GENDER */}
+          <SectionRow>
+            <SectionTitle>Gender</SectionTitle>
+            <OptionsGrid>
+              <OptionButton isSelected={details.gender === 'Female'} onClick={() => handleSelect('gender', 'Female')}>
+                <FaFemale /> Female
+              </OptionButton>
+              <OptionButton isSelected={details.gender === 'Male'} onClick={() => handleSelect('gender', 'Male')}>
+                <FaMale /> Male
+              </OptionButton>
+            </OptionsGrid>
+          </SectionRow>
+
+          {/* OCCUPATION */}
+          <SectionRow>
+            <SectionTitle>What do you do?</SectionTitle>
+            <OptionsGrid>
+              <OptionButton isSelected={details.occupation === 'College Student'} onClick={() => handleSelect('occupation', 'College Student')}>
+                <FaUserGraduate /> College Student
+              </OptionButton>
+              <OptionButton isSelected={details.occupation === 'Working Professional'} onClick={() => handleSelect('occupation', 'Working Professional')}>
+                <FaBriefcase /> Working Professional
+              </OptionButton>
+              <OptionButton isSelected={details.occupation === 'School Student'} onClick={() => handleSelect('occupation', 'School Student')}>
+                <FaChild /> School Student
+              </OptionButton>
+              <OptionButton isSelected={details.occupation === 'Other'} onClick={() => handleSelect('occupation', 'Other')}>
+                <FaQuestionCircle /> Other
+              </OptionButton>
+            </OptionsGrid>
+          </SectionRow>
+
+          {/* --- UPDATED BODY SHAPE SECTION --- */}
+          <SectionRow>
+            <SectionTitle>Body Shape</SectionTitle>
+            <OptionsGrid>
+              {['Rectangle', 'Oval', 'Triangle', 'Trapezoid', 'V-shape'].map(shape => (
+                // Using the new, larger, image-only button
+                <ImageOptionButton key={shape} isSelected={details.body_shape === shape} onClick={() => handleSelect('body_shape', shape)}>
+                  <img src={`/icons/body-shapes/${shape.toLowerCase()}.jpg`} alt={shape} />
+                  {/* Text has been removed from here */}
+                </ImageOptionButton>
+              ))}
+            </OptionsGrid>
+          </SectionRow>
+
+          {/* BODY SIZE */}
+          <SectionRow>
+            <SectionTitle>Body Size</SectionTitle>
+            <OptionsGrid>
+              {['Skinny', 'Average', 'Plus Size'].map(size => (
+                <OptionButton key={size} isSelected={details.body_size === size} onClick={() => handleSelect('body_size', size)}>
+                  {size}
+                </OptionButton>
+              ))}
+            </OptionsGrid>
+          </SectionRow>
           
-          <Formik
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            onSubmit={handleSubmit}
-          >
-            {({ isSubmitting }) => (
-              <StyledForm>
-                <FormRow>
-                  <FormGroup>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <StyledField
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      placeholder="Enter your first name"
-                      as={Input}
-                    />
-                    <ErrorMessage name="firstName" component={ErrorText} />
-                  </FormGroup>
-                  
-                  <FormGroup>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <StyledField
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      placeholder="Enter your last name"
-                      as={Input}
-                    />
-                    <ErrorMessage name="lastName" component={ErrorText} />
-                  </FormGroup>
-                </FormRow>
-                
-                <FormRow>
-                  <FormGroup>
-                    <Label>Gender</Label>
-                    <RadioGroup>
-                      <RadioLabel>
-                        <Field type="radio" name="gender" value="male" as={RadioInput} />
-                        Male
-                      </RadioLabel>
-                      <RadioLabel>
-                        <Field type="radio" name="gender" value="female" as={RadioInput} />
-                        Female
-                      </RadioLabel>
-                      <RadioLabel>
-                        <Field type="radio" name="gender" value="other" as={RadioInput} />
-                        Other
-                      </RadioLabel>
-                    </RadioGroup>
-                    <ErrorMessage name="gender" component={ErrorText} />
-                  </FormGroup>
-                  
-                  <FormGroup>
-                    <Label htmlFor="age">Age</Label>
-                    <StyledField
-                      type="number"
-                      id="age"
-                      name="age"
-                      placeholder="Enter your age"
-                      as={Input}
-                    />
-                    <ErrorMessage name="age" component={ErrorText} />
-                  </FormGroup>
-                </FormRow>
-                
-                <FormGroup>
-                  <Label htmlFor="phoneNumber">Phone Number</Label>
-                  <StyledField
-                    type="tel"
-                    id="phoneNumber"
-                    name="phoneNumber"
-                    placeholder="Enter your phone number"
-                    as={Input}
-                  />
-                  <ErrorMessage name="phoneNumber" component={ErrorText} />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label htmlFor="address">Address</Label>
-                  <StyledField
-                    type="text"
-                    id="address"
-                    name="address"
-                    placeholder="Enter your address"
-                    as={Input}
-                  />
-                  <ErrorMessage name="address" component={ErrorText} />
-                </FormGroup>
-                
-                <FormRow>
-                  <FormGroup>
-                    <Label htmlFor="city">City</Label>
-                    <StyledField
-                      type="text"
-                      id="city"
-                      name="city"
-                      placeholder="Enter your city"
-                      as={Input}
-                    />
-                    <ErrorMessage name="city" component={ErrorText} />
-                  </FormGroup>
-                  
-                  <FormGroup>
-                    <Label htmlFor="state">State/Province</Label>
-                    <StyledField
-                      type="text"
-                      id="state"
-                      name="state"
-                      placeholder="Enter your state/province"
-                      as={Input}
-                    />
-                    <ErrorMessage name="state" component={ErrorText} />
-                  </FormGroup>
-                </FormRow>
-                
-                <FormRow>
-                  <FormGroup>
-                    <Label htmlFor="zipCode">ZIP Code</Label>
-                    <StyledField
-                      type="text"
-                      id="zipCode"
-                      name="zipCode"
-                      placeholder="Enter your ZIP code"
-                      as={Input}
-                    />
-                    <ErrorMessage name="zipCode" component={ErrorText} />
-                  </FormGroup>
-                  
-                  <FormGroup>
-                    <Label htmlFor="country">Country</Label>
-                    <SelectWrapper>
-                      <StyledSelect as="select" id="country" name="country">
-                        <option value="">Select your country</option>
-                        <option value="US">United States</option>
-                        <option value="CA">Canada</option>
-                        <option value="UK">United Kingdom</option>
-                        <option value="AU">Australia</option>
-                        <option value="IN">India</option>
-                        {/* Add more countries as needed */}
-                      </StyledSelect>
-                    </SelectWrapper>
-                    <ErrorMessage name="country" component={ErrorText} />
-                  </FormGroup>
-                </FormRow>
-                
-                <FormGroup>
-                  <Label htmlFor="stylePreference">Style Preference</Label>
-                  <SelectWrapper>
-                    <StyledSelect as="select" id="stylePreference" name="stylePreference">
-                      <option value="">Select your style preference</option>
-                      <option value="casual">Casual</option>
-                      <option value="formal">Formal</option>
-                      <option value="business">Business</option>
-                      <option value="sporty">Sporty</option>
-                      <option value="vintage">Vintage</option>
-                      <option value="minimalist">Minimalist</option>
-                      <option value="bohemian">Bohemian</option>
-                      <option value="streetwear">Streetwear</option>
-                    </StyledSelect>
-                  </SelectWrapper>
-                  <ErrorMessage name="stylePreference" component={ErrorText} />
-                </FormGroup>
-                
-                <SubmitButton type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating Account...' : 'Complete Sign Up'}
-                </SubmitButton>
-              </StyledForm>
-            )}
-          </Formik>
+          {/* --- UPDATED FACE SHAPE SECTION --- */}
+          <SectionRow>
+            <SectionTitle>Face Shape</SectionTitle>
+            <OptionsGrid>
+              {['Oval', 'Round', 'Square', 'Heart', 'Diamond'].map(shape => (
+                 // Using the new, larger button but keeping the text
+                <ImageOptionButton key={shape} isSelected={details.face_shape === shape} onClick={() => handleSelect('face_shape', shape)}>
+                  <img src={`/icons/face-shapes/${shape.toLowerCase()}.jpg`} alt={shape} />
+                  {shape} 
+                </ImageOptionButton>
+              ))}
+            </OptionsGrid>
+          </SectionRow>
+
+          {/* --- NEW SKIN COLOUR SECTION --- */}
+          <SectionRow>
+            <SectionTitle>Skin Tone</SectionTitle>
+            <OptionsGrid style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(50px, 1fr))' }}>
+              {skinTones.map(color => (
+                <ColorButton 
+                  key={color} 
+                  color={color} 
+                  isSelected={details.skin_colour === color} 
+                  onClick={() => handleSelect('skin_colour', color)}
+                >
+                  {details.skin_colour === color && <FaCheck color="white" />}
+                </ColorButton>
+              ))}
+            </OptionsGrid>
+          </SectionRow>
+
+          {error && <ErrorText>{error}</ErrorText>}
+
+          <ButtonGroup>
+            <BackButton onClick={() => navigate(-1)}>&larr; Back</BackButton>
+            <PrimaryButton onClick={handleSubmit}>Finish Sign Up</PrimaryButton>
+          </ButtonGroup>
         </DetailsCard>
       </DetailsContainer>
     </Layout>
