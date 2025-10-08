@@ -86,7 +86,7 @@ const Layout: React.FC<LayoutProps> = ({ children, isLoggedIn = false, username 
       <Footer>
         <FooterContent>
           <FooterSection>
-            <FooterTitle>Virtual Stylish</FooterTitle>
+            <FooterTitle>CHIC</FooterTitle>
             <p style={{ opacity: 0.8, marginBottom: theme.spacing.md }}>
               Your personal style assistant that helps you look your best every day.
             </p>
@@ -102,13 +102,13 @@ const Layout: React.FC<LayoutProps> = ({ children, isLoggedIn = false, username 
           
           <FooterSection>
             <FooterTitle>Contact</FooterTitle>
-            <FooterLink href="mailto:info@virtualstylish.com">info@virtualstylish.com</FooterLink>
+            <FooterLink href="mailto:info@chicstylish.com">info@chicstylish.com</FooterLink>
             <FooterLink href="tel:+1234567890">+1 (234) 567-890</FooterLink>
             <FooterLink href="#">123 Fashion Street, Style City</FooterLink>
           </FooterSection>
           
           <Copyright>
-            © {currentYear} Virtual Stylish. All rights reserved.
+            © {currentYear} CHIC. All rights reserved.
           </Copyright>
         </FooterContent>
       </Footer>

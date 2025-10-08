@@ -162,7 +162,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, username }) => {
   return (
     <NavbarContainer>
       <NavbarContent>
-        <Logo to="/">Virtual Stylish</Logo>
+        <Logo to="/">CHIC</Logo>
 
         <NavLinks>
           <NavLink to="/">Home</NavLink>
